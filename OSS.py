@@ -11,9 +11,11 @@ class OSSGenerator:
     '''
     def __init__(self, n):
         '''
-        int n - size of large odd nubmer in bytes
-        '''        
-        self.__n = n
+        int n - size for a large odd nubmer in bytes
+        '''
+        self.__n_size = n
+        self.__n = int.from_bytes(urandom(self.__n_size), 'big')
+        if not self.__n % 2: self.__n+=1
         self.__generate_keys()
 
     def __generate_keys(self):        
@@ -21,7 +23,7 @@ class OSSGenerator:
         while not math.gcd(self.__n, k) == 1:
             k = random.SystemRandom().randint(0, self.__n)
 
-        g = (-1*pow(inverse(k, self.__n), 2, self.__n)) % self.__n
+        g = (-1*(pow(inverse(k, self.__n), 2, self.__n))) % self.__n # computes g = (-(k^-1)^2) % n
 
         self.__public_key = (self.__n, g)
         self.__private_key = (self.__n, k)
@@ -39,7 +41,7 @@ class OSSPubKey:
     def __init__(self, n, g):
         '''
         int n - large odd number
-        ing g - base on a calculation of n and random int k
+        ing g - based on a calculation of n and random int k
         '''
         self.__n = n
         self.__g = g
@@ -50,8 +52,8 @@ class OSSPubKey:
         tuple [int, int] sig - sig(M) = (S1, S2)
         '''
         h_M = int.from_bytes(sha256(M).digest(), 'big')
-        print(f"S1: {sig[0]} , S2: {sig[1]} , n: {self.__n} , g: {self.__g} , h(M): {h_M}") # testestest
-        return (sig[0]**2 + (self.__g*sig[1]**2)) % self.__n == (h_M % self.__n)
+        print(f"S1: {sig[0]} \n S2: {sig[1]} \n n: {self.__n} \n g: {self.__g} \n h(M): {h_M}") # test the variables values
+        return (pow(sig[0], 2, self.__n) + (self.__g*pow(sig[1], 2, self.__n))) % self.__n == (h_M % self.__n)
 
 
 class OSSPriKey:
@@ -72,9 +74,9 @@ class OSSPriKey:
             r = random.SystemRandom().randint(0, self.__n)
 
         h_M = int.from_bytes(sha256(M).digest(), 'big')
-        S1 = int((2**-1) % self.__n * (h_M * inverse(r, self.__n) + r) % self.__n)
-        S2 = int((((2**-1) * self.__k) % self.__n * (h_M * inverse(r, self.__n) - r)% self.__n) % self.__n)
-        print(f"S1: {S1} , S2: {S2} , n: {self.__n} , k: {self.__k} , r: {r} , h(M): {h_M}") # testestest
+        S1 = (inverse(2, self.__n) * (h_M * inverse(r, self.__n) + r)) % self.__n
+        S2 = (inverse(2, self.__n) * self.__k * (h_M * inverse(r, self.__n) - r)) % self.__n
+        print(f"S1: {S1} \n S2: {S2} \n n: {self.__n} \n k: {self.__k} \n h(M): {h_M}") # test the variables values
         return S1,S2
 
 
@@ -107,7 +109,7 @@ def sig_doc():
     '''
     sign a document and save it with postfix .sig
     '''
-    filename = input("Enter file's name: ")
+    filename = input("Enter file's name (without extention): ")
     with open(filename+'.txt', 'rb') as f:
         M = f.read()
     with open('private.key', 'rb') as f:
@@ -134,7 +136,7 @@ def ver_doc():
     '''
     verify if a document signature
     '''
-    filename = input("Enter file's name: ")
+    filename = input("Enter file's name (without extention): ")
     with open(filename+'.sig', 'rb') as f:
         M = f.read()
     with open('public.key', 'rb') as f:
