@@ -117,7 +117,7 @@ def sig_doc():
     size_n = int.from_bytes(pr_key[:2], 'big')
     n_stopper = 2+size_n
     n = int.from_bytes(pr_key[2:n_stopper], 'big')
-    k = int.from_bytes(pr_key[n_stopper+2:], 'big')
+    k = int.from_bytes(pr_key[n_stopper:], 'big')
     oss_pr_key = OSSPriKey(n, k)
     S1, S2 = oss_pr_key.sig(M)
     S1 = S1.to_bytes((S1.bit_length() + 7) // 8, 'big')
@@ -144,7 +144,7 @@ def ver_doc():
     size_n = int.from_bytes(pu_key[:2], 'big')
     n_stopper = 2+size_n
     n = int.from_bytes(pu_key[2:n_stopper], 'big')
-    g = int.from_bytes(pu_key[n_stopper+2:], 'big')
+    g = int.from_bytes(pu_key[n_stopper:], 'big')
     oss_pu_key = OSSPubKey(n, g)
 
     size_S1 = int.from_bytes(M[:2], 'big')
